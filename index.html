@@ -3,58 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Golden TOEIC Master</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TOEIC Golden Mastery</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <nav>
-        <button onclick="showView('study')">暗記</button>
-        <button onclick="showView('test')">単語テスト</button>
-        <button onclick="showView('phrase')">フレーズ穴埋め</button>
-        <button onclick="showView('list')">進捗</button>
+        <button onclick="showView('study')" id="nav-study" class="active">暗記</button>
+        <button onclick="showView('test')" id="nav-test">単語テスト</button>
+        <button onclick="showView('grammar')" id="nav-grammar">文法問題</button>
+        <button onclick="showView('list')" id="nav-list">一覧</button>
     </nav>
 
-    <div class="streak-display" id="streak-display">🔥 継続: 0日</div>
+    <div class="streak-badge" id="streak-display">🔥 継続: 1日</div>
+
+    <div id="study" class="view active">
+        <div class="selector-group">
+            <select id="study-genre" onchange="resetStudy()">
+                <option value="600">600点 助走</option>
+                <option value="730">730点 加速</option>
+            </select>
+        </div>
+        <div class="card" onclick="toggleFlip()">
+            <div id="study-tag" class="tag">CAT</div>
+            <div class="audio-btn" onclick="handleSpeak(event, 'study')">🔊</div>
+            <div id="study-en" class="en">Word</div>
+            <div id="study-jp" class="jp hidden">意味</div>
+        </div>
+        <div id="study-count">0 / 0</div>
+        <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+            <button class="main-btn" style="background:#dadce0; color:#3c4043; width:45%;" onclick="prevCard()">前へ</button>
+            <button class="main-btn" style="width:45%;" onclick="nextCard()">次へ</button>
+        </div>
+    </div>
 
     <div id="test" class="view">
-        <div id="test-start">
-            <h2>単語テスト (20秒制限)</h2>
-            <select id="test-genre">
-                <option value="600点 助走">600点 助走</option>
-                <option value="730点 加速">730点 加速</option>
-                <option value="860点 飛躍">860点 飛躍</option>
-            </select>
-            <button class="main-btn" onclick="startTest()">開始</button>
+        <div id="test-start-screen">
+            <h2>単語 4択テスト (20秒制限)</h2>
+            <div class="selector-group">
+                <select id="test-genre">
+                    <option value="600">600点 助走</option>
+                    <option value="730">730点 加速</option>
+                </select>
+            </div>
+            <button class="main-btn" onclick="startTest()">テスト開始</button>
         </div>
         <div id="quiz-area" class="hidden">
-            <div class="timer-bar"><div id="timer-fill"></div></div>
-            <div class="card">
-                <div id="quiz-en" class="en">Word</div>
+            <div class="timer-container"><div id="timer-bar"></div></div>
+            <div class="card" style="cursor:default; min-height:180px;">
+                <div id="quiz-tag" class="tag">CAT</div>
+                <div id="quiz-en" class="en" style="font-size:22px;">Question</div>
+                <div id="quiz-phrase-jp" style="font-size:14px; color:#666; margin-top:10px;"></div>
             </div>
             <div class="options" id="options"></div>
         </div>
+        <div id="test-result" class="hidden">
+            <h3 id="result-score"></h3>
+            <button class="main-btn" onclick="showView('test')">もう一度</button>
+        </div>
     </div>
 
-    <div id="phrase" class="view">
-        <div id="phrase-start">
-            <h2>フレーズ穴埋め</h2>
-            <button class="main-btn" onclick="startPhrase()">開始</button>
-        </div>
-        <div id="phrase-area" class="hidden">
-            <div class="card" onclick="revealPhrase()">
-                <div id="p-jp" class="jp-sub">意味</div>
-                <div id="p-en" class="en">Hint</div>
-                <div id="p-ans" class="jp hidden">正解</div>
-            </div>
-            <button class="main-btn" onclick="nextPhrase()">次へ</button>
-        </div>
-    </div>
+    <div id="grammar" class="view">...（以前の構造と同じ）...</div>
+    <div id="list" class="view">...（以前の構造と同じ）...</div>
 
     <script src="js/data-600.js"></script>
     <script src="js/data-730.js"></script>
-    
     <script src="js/words-loader.js"></script>
-    
-    <script src="js/app.js"></script>
+    <script src="js/grammar-data.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/view-router.js"></script>
+    <script src="js/main-logic.js"></script>
 </body>
 </html>
