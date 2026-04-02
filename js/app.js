@@ -61,7 +61,49 @@ const AppState = {
 };
 
 // ==========================================
-// 2. UI Controller Module (画面描画)
+// 2. Study Controller Module (暗記モード復活)
+// ==========================================
+const StudyController = {
+    studyIdx: 0,
+    filteredStudyWords: [],
+
+    resetStudy: function() {
+        const g = document.getElementById('study-genre').value;
+        this.filteredStudyWords = rawData.filter(w => w.cat === g);
+        this.studyIdx = 0;
+        this.updateStudy();
+    },
+
+    updateStudy: function() {
+        if (this.filteredStudyWords.length === 0) return;
+        const w = this.filteredStudyWords[this.studyIdx];
+        
+        document.getElementById('study-en').innerText = w.en;
+        document.getElementById('study-jp').innerText = w.jp;
+        document.getElementById('study-jp').classList.add('hidden');
+        document.getElementById('study-count').innerText = `${this.studyIdx + 1} / ${this.filteredStudyWords.length}`;
+        document.getElementById('study-tag').innerText = w.cat + "点レベル";
+    },
+
+    toggleFlip: function() {
+        document.getElementById('study-jp').classList.toggle('hidden');
+    },
+
+    nextCard: function() {
+        if (this.filteredStudyWords.length === 0) return;
+        this.studyIdx = (this.studyIdx + 1) % this.filteredStudyWords.length;
+        this.updateStudy();
+    },
+
+    prevCard: function() {
+        if (this.filteredStudyWords.length === 0) return;
+        this.studyIdx = (this.studyIdx - 1 + this.filteredStudyWords.length) % this.filteredStudyWords.length;
+        this.updateStudy();
+    }
+};
+
+// ==========================================
+// 3. UI Controller Module (画面描画)
 // ==========================================
 const UIController = {
     showView: function(viewId) {
@@ -82,6 +124,8 @@ const UIController = {
             this.updateProgressUI();
             this.renderCalendar();
         }
+        // 暗記タブを開いた時に初期化する
+        if (viewId === 'study') StudyController.resetStudy();
     },
 
     renderList: function() {
@@ -153,7 +197,7 @@ const UIController = {
 };
 
 // ==========================================
-// 3. Quiz Controller Module (テストロジック)
+// 4. Quiz Controller Module (テストロジック)
 // ==========================================
 const QuizController = {
     initTest: function() {
@@ -191,10 +235,9 @@ const QuizController = {
         const quizPjp = document.getElementById('quiz-phrase-jp');
         const progress = document.getElementById('test-progress-bar');
         
-        progress.style.width = ((AppState.testIdx / 10) * 100) + "%";
+        progress.style.width = ((AppState.testIdx / AppState.testList.length) * 100) + "%";
         quizPjp.classList.add('hidden');
 
-        // モード別の表示と音声
         if (AppState.currentMode === 'listening') {
             quizEn.innerText = "???";
             speak(q.en);
@@ -205,15 +248,17 @@ const QuizController = {
             speak(q.en);
         }
         
+        // ★ 20秒タイマー起動
         this.startTimer(20);
 
         const container = document.getElementById('options');
         container.innerHTML = '';
         container.classList.remove('answered');
 
-        // ★ 4択が消えたバグの修正箇所：確実に4つの選択肢を生成する
         const isEnglishOpt = (AppState.currentMode === 'phrase');
         const correctOpt = isEnglishOpt ? q.en : q.jp;
+        
+        // エラー防止用の堅牢な4択生成
         let opts = this.generateOptions(correctOpt, isEnglishOpt);
 
         opts.forEach(o => {
@@ -223,15 +268,12 @@ const QuizController = {
             btn.onclick = () => {
                 if (container.classList.contains('answered')) return;
                 container.classList.add('answered');
-                clearInterval(AppState.timerInterval);
+                clearInterval(AppState.timerInterval); // クリックでタイマー停止
 
                 const isCorrect = (o === correctOpt);
-                
-                // ストレージに記録
                 AppState.recordAnswer(q.en, isCorrect);
                 UIController.updateProgressUI();
 
-                // 正解表示
                 const highlight = `<span style="color:#d93025; font-weight:bold;">${q.en}</span>`;
                 quizEn.innerHTML = q.phrase.replace(q.en, highlight);
                 quizPjp.innerText = q.phraseJp + " (" + q.jp + ")";
@@ -247,8 +289,7 @@ const QuizController = {
                     });
                 }
                 
-                // アロー関数を使って this(QuizController) のコンテキストを保持
-                setTimeout(() => { AppState.testIdx++; this.renderQuiz(); }, 2500);
+                setTimeout(() => { AppState.testIdx++; QuizController.renderQuiz(); }, 2500);
             };
             container.appendChild(btn);
         });
@@ -256,34 +297,48 @@ const QuizController = {
 
     generateOptions: function(correctValue, isEnglish) {
         let opts = [correctValue];
-        let pool = rawData.map(d => isEnglish ? d.en : d.jp);
+        // 万が一データがない場合はエラーを防ぐ
+        if (!rawData || rawData.length === 0) return opts;
+
+        let pool = rawData.map(d => isEnglish ? d.en : d.jp).filter(Boolean); // 空データを除外
         
-        // poolからランダムに取得し、重複しないように追加
-        while(opts.length < 4) {
+        let attempts = 0; // 無限ループ防止
+        while(opts.length < 4 && attempts < 50) {
             let r = pool[Math.floor(Math.random() * pool.length)];
             if(!opts.includes(r)) opts.push(r);
+            attempts++;
         }
         return opts.sort(() => 0.5 - Math.random());
     },
 
+    // ★ 20秒減っていくタイマーバー
     startTimer: function(seconds) {
         let timeLeft = seconds;
         const bar = document.getElementById('timer-bar');
         clearInterval(AppState.timerInterval);
+        
         AppState.timerInterval = setInterval(() => {
             timeLeft -= 0.1;
-            bar.style.width = (timeLeft / seconds * 100) + "%";
+            // バーの長さを減らす（100% → 0%）
+            if(bar) bar.style.width = (timeLeft / seconds * 100) + "%";
+            
+            // 20秒経過時の処理
             if (timeLeft <= 0) {
                 clearInterval(AppState.timerInterval);
-                AppState.testIdx++;
-                this.renderQuiz();
+                const container = document.getElementById('options');
+                if (!container.classList.contains('answered')) {
+                    container.classList.add('answered');
+                    // 時間切れは不正解扱いとして次に進む
+                    AppState.testIdx++;
+                    QuizController.renderQuiz();
+                }
             }
-        }, 100);
+        }, 100); // 0.1秒ごとに更新して滑らかに
     }
 };
 
 // ==========================================
-// 4. Global Helpers (音声とHTMLからの呼び出し用)
+// 5. Global Helpers (HTMLからの呼び出し用)
 // ==========================================
 function speak(text) {
     window.speechSynthesis.cancel();
@@ -293,25 +348,37 @@ function speak(text) {
     window.speechSynthesis.speak(uttr);
 }
 
-// HTMLの onclick="..." から呼ばれるためのラッパー関数
+// HTMLから直接呼ばれる窓口
 function showView(viewId) { UIController.showView(viewId); }
 function initTest() { QuizController.initTest(); }
 function abortTest() { QuizController.abortTest(); }
 function renderList() { UIController.renderList(); }
 function saveGoal() { AppState.saveGoal(document.getElementById('goal-input').value); }
+
+// 暗記モードの操作窓口
+function resetStudy() { StudyController.resetStudy(); }
+function toggleFlip() { StudyController.toggleFlip(); }
+function nextCard() { StudyController.nextCard(); }
+function prevCard() { StudyController.prevCard(); }
+
 function handleSpeak(e, mode) {
     e.stopPropagation();
     if(mode === 'test' && AppState.testList[AppState.testIdx]) {
         speak(AppState.testList[AppState.testIdx].en);
+    } else if (mode === 'study' && StudyController.filteredStudyWords[StudyController.studyIdx]) {
+        speak(StudyController.filteredStudyWords[StudyController.studyIdx].en);
     }
-    // ※ 暗記モード(study)の変数は別途整理が必要ですが、今回はテストと一覧に注力しています
 }
 
 // ==========================================
-// 5. 初期化
+// 6. 初期化
 // ==========================================
 window.onload = () => {
-    // 日付が変わっていたら本日のカウントをリセット
+    // データの準備ができているか確認（エラー防止）
+    if (typeof rawData === 'undefined') {
+        console.error("単語データが読み込まれていません。index.htmlの読み込み順序を確認してください。");
+    }
+
     const todayStr = new Date().toLocaleDateString('sv-SE');
     if (localStorage.getItem('last_played_date') !== todayStr) {
         AppState.dailyCount = 0;
@@ -319,5 +386,6 @@ window.onload = () => {
         localStorage.setItem('last_played_date', todayStr);
     }
     
-    UIController.showView('progress'); 
+    StudyController.resetStudy(); // 暗記データを裏で準備しておく
+    UIController.showView('progress'); // 最初は進捗タブ
 };
