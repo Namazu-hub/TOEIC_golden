@@ -1,66 +1,104 @@
-// --- 核心となるクイズ描画ロジック ---
+let currentView = 'study';
+let testMode = 'translation'; // 'translation' or 'listening'
+let testIdx = 0;
+let timerInterval;
+
+// --- タブ切り替え ---
+function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(viewId).classList.add('active');
+    document.getElementById('nav-' + viewId).classList.add('active');
+    currentView = viewId;
+    
+    if(viewId === 'list') renderList();
+}
+
+// --- 単語テストロジック ---
+function startTest(mode) {
+    testMode = mode;
+    const genre = document.getElementById('test-genre').value;
+    testList = rawData.filter(d => d.cat === genre).sort(() => 0.5 - Math.random()).slice(0, 10);
+    testIdx = 0;
+    
+    document.getElementById('test-start-screen').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+    renderQuiz();
+}
+
 function renderQuiz() {
     if (testIdx >= testList.length) {
-        showResult(); // 結果画面へ
+        document.getElementById('quiz-area').classList.add('hidden');
+        document.getElementById('test-result').classList.remove('hidden');
         return;
     }
 
     const q = testList[testIdx];
-    const quizDisplay = document.getElementById('quiz-en');
-    const jpHint = document.getElementById('phrase-jp-hint');
+    const quizEn = document.getElementById('quiz-en');
     
-    // 1. セットアップ：穴埋めヒントと日本語訳を表示
-    quizDisplay.innerText = q.hint; // 例: Let's try a______
-    jpHint.innerText = q.phraseJp; // 例: とにかくやってみよう
-    speak(q.en); 
+    // リスニングモードなら最初は文字を隠す
+    if (testMode === 'listening') {
+        quizEn.innerText = "???";
+        speak(q.en);
+    } else {
+        quizEn.innerText = q.hint;
+        speak(q.en);
+    }
 
-    // 2. タイマー起動（20秒）
     startTimer(20);
 
-    // 3. 選択肢生成
     const container = document.getElementById('options');
     container.innerHTML = '';
-    
-    // 正解(q.jp)とランダムな誤答3つを混ぜる
-    let opts = generateOptions(q.jp); 
+    let opts = generateOptions(q.jp); // 4択作成ロジックは既存のものを流用
 
     opts.forEach(o => {
         const btn = document.createElement('div');
-        btn.className = 'option-btn';
+        btn.className = 'option';
         btn.innerText = o;
-        btn.onclick = () => handleAnswer(o, q, btn, container);
+        btn.onclick = () => {
+            if (container.classList.contains('answered')) return;
+            container.classList.add('answered');
+            clearInterval(timerInterval);
+
+            // 正解表示（赤文字フレーズ）
+            const highlight = `<span class="red-word">${q.en}</span>`;
+            quizEn.innerHTML = q.phrase.replace(q.en, highlight);
+            
+            if (o === q.jp) {
+                btn.classList.add('correct');
+                speak(q.phrase);
+            } else {
+                btn.classList.add('wrong');
+            }
+
+            setTimeout(() => {
+                container.classList.remove('answered');
+                testIdx++;
+                renderQuiz();
+            }, 2500);
+        };
         container.appendChild(btn);
     });
 }
 
-// --- 回答時の演出ロジック ---
-function handleAnswer(selected, correctObj, btn, container) {
-    if (container.classList.contains('answered')) return;
-    container.classList.add('answered'); // 連続クリック防止
-    clearInterval(timer); // タイマー停止
-
-    const isCorrect = (selected === correctObj.jp);
-    
-    // 1. 正解フレーズの赤文字ハイライト生成
-    // phrase: "Let's try anyway", en: "anyway" -> anywayを赤く
-    const highlight = `<span class="highlight-red">${correctObj.en}</span>`;
-    const fullPhrase = correctObj.phrase.replace(correctObj.en, highlight);
-    
-    document.getElementById('quiz-en').innerHTML = fullPhrase;
-    
-    // 2. 音声フィードバック
-    if (isCorrect) {
-        btn.classList.add('correct');
-        speak(correctObj.phrase); // 正解ならフレーズ全体を読み上げ
-    } else {
-        btn.classList.add('wrong');
-        // 不正解なら正しい選択肢を光らせる処理（省略可）
-    }
-
-    // 3. 次の問題へのインターバル（じっくり確認させるため2.5秒）
-    setTimeout(() => {
-        container.classList.remove('answered');
-        testIdx++;
-        renderQuiz();
-    }, 2500);
+function startTimer(sec) {
+    let timeLeft = sec;
+    const bar = document.getElementById('timer-bar');
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        bar.style.width = (timeLeft / sec * 100) + "%";
+        if (timeLeft <= 0) { clearInterval(timerInterval); testIdx++; renderQuiz(); }
+    }, 100);
 }
+
+// 読み上げ
+function speak(text) {
+    window.speechSynthesis.cancel();
+    const uttr = new SpeechSynthesisUtterance(text);
+    uttr.lang = 'en-US';
+    window.speechSynthesis.speak(uttr);
+}
+
+// ※ generateOptions, resetStudy, updateStreak 等の補助関数は以前のものを組み込んでください。
