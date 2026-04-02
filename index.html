@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Golden TOEIC Master Pro</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>TOEIC Golden Master</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -29,24 +31,32 @@
             <div id="study-jp" class="jp hidden">意味</div>
         </div>
         <div id="study-count">0 / 0</div>
-        <div class="btn-group">
-            <button class="sub-btn" onclick="prevCard()">前へ</button>
-            <button class="main-btn" onclick="nextCard()">次へ</button>
+        <div class="btn-group" style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+            <button class="option" style="width:40%; margin:0;" onclick="prevCard()">前へ</button>
+            <button class="option" style="width:40%; margin:0; background:#4A90E2; color:white;" onclick="nextCard()">次へ</button>
         </div>
     </div>
 
     <div id="test" class="view">
         <div id="test-start-screen">
-            <h2>テスト設定</h2>
-            <div class="selector-group">
-                <select id="test-genre">
-                    <option value="600">600点 助走</option>
-                    <option value="730">730点 加速</option>
-                </select>
-            </div>
-            <div class="mode-selection">
-                <button class="mode-btn" onclick="startTest('translation')">英単語 → 日本語</button>
-                <button class="mode-btn" onclick="startTest('listening')">リスニング → 日本語</button>
+            <div class="card" style="padding: 30px 20px;">
+                <h2 style="margin-top:0;">TEST SETTINGS</h2>
+                <p class="label" style="text-align:left; font-size:12px; color:#888; margin-left:5%;">LEVEL</p>
+                <div class="selector-group">
+                    <select id="test-genre">
+                        <option value="600">600点 助走</option>
+                        <option value="730">730点 加速</option>
+                    </select>
+                </div>
+                <p class="label" style="text-align:left; font-size:12px; color:#888; margin-left:5%;">MODE</p>
+                <div class="selector-group">
+                    <select id="test-mode">
+                        <option value="translation">英単語 → 和訳</option>
+                        <option value="listening">リスニング → 和訳</option>
+                        <option value="phrase">フレーズ穴埋め (英単語選択)</option>
+                    </select>
+                </div>
+                <button class="option" style="width:90%; background:#4A90E2; color:white; margin-top:20px;" onclick="initTest()">テスト開始</button>
             </div>
         </div>
 
@@ -57,14 +67,16 @@
                 <div id="quiz-tag" class="tag">LEVEL</div>
                 <div class="audio-btn" onclick="handleSpeak(event, 'test')">🔊</div>
                 <div id="quiz-en" class="en">Question</div>
-                <div id="quiz-phrase-jp" class="phrase-jp"></div>
+                <div id="quiz-phrase-jp" class="phrase-jp" style="margin-top:15px; color:#666; font-size:16px;"></div>
             </div>
             <div class="options" id="options"></div>
         </div>
 
         <div id="test-result" class="hidden">
-            <h3 id="result-score"></h3>
-            <button class="main-btn" onclick="showView('test')">戻る</button>
+            <div class="card">
+                <h2 id="result-score"></h2>
+                <button class="option" style="width:100%;" onclick="showView('test'); location.reload();">戻る</button>
+            </div>
         </div>
     </div>
 
@@ -76,9 +88,14 @@
                 <option value="730">730点 加速</option>
             </select>
         </div>
-        <div class="list-card">
-            <table>
-                <thead><tr><th>単語</th><th>意味</th><th>習得度</th></tr></thead>
+        <div class="card" style="padding: 10px; width:95%;">
+            <table style="width:100%; border-collapse: collapse; font-size:14px;">
+                <thead>
+                    <tr style="border-bottom:1px solid #eee;">
+                        <th style="padding:10px;">単語</th>
+                        <th>意味</th>
+                    </tr>
+                </thead>
                 <tbody id="list-body"></tbody>
             </table>
         </div>
@@ -86,7 +103,9 @@
 
     <script src="js/data-600.js"></script>
     <script src="js/data-730.js"></script>
+    
     <script src="js/words-loader.js"></script>
+    
     <script src="js/app.js"></script>
 </body>
 </html>
