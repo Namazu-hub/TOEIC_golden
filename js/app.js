@@ -59,9 +59,8 @@ const AppState = {
         }
     }
 };
-
 // ==========================================
-// 2. Study Controller Module (暗記モード復活)
+// 2. Study Controller Module (暗記モード)
 // ==========================================
 const StudyController = {
     studyIdx: 0,
@@ -69,13 +68,20 @@ const StudyController = {
 
     resetStudy: function() {
         const g = document.getElementById('study-genre').value;
+        // rawData が存在するか安全にチェック
+        if (typeof rawData === 'undefined' || rawData.length === 0) return;
+        
         this.filteredStudyWords = rawData.filter(w => w.cat === g);
         this.studyIdx = 0;
         this.updateStudy();
     },
 
     updateStudy: function() {
-        if (this.filteredStudyWords.length === 0) return;
+        if (this.filteredStudyWords.length === 0) {
+            document.getElementById('study-en').innerText = "単語がありません";
+            document.getElementById('study-jp').innerText = "";
+            return;
+        }
         const w = this.filteredStudyWords[this.studyIdx];
         
         document.getElementById('study-en').innerText = w.en;
@@ -101,7 +107,6 @@ const StudyController = {
         this.updateStudy();
     }
 };
-
 // ==========================================
 // 3. UI Controller Module (画面描画)
 // ==========================================
