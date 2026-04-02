@@ -194,3 +194,42 @@ function handleSpeak(e, mode) {
     let text = (mode === 'study') ? filteredStudyWords[studyIdx].en : testList[testIdx].en;
     speak(text);
 }
+
+// クイズに回答するたびにカウントを増やす
+function incrementDailyCount() {
+    let count = parseInt(localStorage.getItem('today_count')) || 0;
+    count++;
+    localStorage.setItem('today_count', count);
+
+    // 100問達成した瞬間に判定
+    if (count === 100) {
+        processStreak(); // 継続日数の更新処理
+        alert("本日のノルマ100問達成！🔥が灯りました！");
+    }
+    updateStreakDisplay(); // UI表示の更新
+}
+
+// 継続日数の判定ロジック
+function processStreak() {
+    const today = new Date().toLocaleDateString();
+    let lastSuccessDate = localStorage.getItem('last_success_date');
+    let streak = parseInt(localStorage.getItem('streak')) || 0;
+
+    if (lastSuccessDate !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
+        // 最後に100問達成したのが昨日なら継続、それ以外なら1にリセット
+        if (lastSuccessDate === yesterday.toLocaleDateString()) {
+            streak++;
+        } else {
+            streak = 1;
+        }
+        
+        localStorage.setItem('last_success_date', today);
+        localStorage.setItem('streak', streak);
+        
+        // 達成した日付をカレンダー用に保存
+        saveCompletedDate(today);
+    }
+}
