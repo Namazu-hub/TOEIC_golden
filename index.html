@@ -9,15 +9,14 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <nav>
-        <button onclick="showView('study')" id="nav-study" class="active">暗記</button>
+    <nav id="main-nav">
+        <button onclick="showView('study')" id="nav-study">暗記</button>
         <button onclick="showView('test')" id="nav-test">単語テスト</button>
         <button onclick="showView('list')" id="nav-list">一覧</button>
+        <button onclick="showView('progress')" id="nav-progress" class="active">進捗</button>
     </nav>
 
-    <div class="streak-badge" id="streak-display">🔥 継続: 1日</div>
-
-    <div id="study" class="view active">
+    <div id="study" class="view">
         <div class="selector-group">
             <select id="study-genre" onchange="resetStudy()">
                 <option value="600">600点 助走</option>
@@ -60,14 +59,17 @@
             </div>
         </div>
 
-        <div id="quiz-area" class="hidden">
+        <div id="quiz-area" class="hidden" style="position: relative;">
+            <button class="abort-btn" onclick="abortTest()" style="position: absolute; top: -10px; right: 10px; background: none; border: none; font-size: 24px; color: #999; cursor: pointer; z-index: 10;">×</button>
+            
             <div class="test-progress-container"><div id="test-progress-bar"></div></div>
             <div class="timer-container"><div id="timer-bar"></div></div>
+            
             <div class="card">
                 <div id="quiz-tag" class="tag">LEVEL</div>
                 <div class="audio-btn" onclick="handleSpeak(event, 'test')">🔊</div>
                 <div id="quiz-en" class="en">Question</div>
-                <div id="quiz-phrase-jp" class="phrase-jp" style="margin-top:15px; color:#666; font-size:16px;"></div>
+                <div id="quiz-phrase-jp" class="phrase-jp hidden" style="margin-top:15px; color:#666; font-size:16px;"></div>
             </div>
             <div class="options" id="options"></div>
         </div>
@@ -75,7 +77,7 @@
         <div id="test-result" class="hidden">
             <div class="card">
                 <h2 id="result-score"></h2>
-                <button class="option" style="width:100%;" onclick="showView('test'); location.reload();">戻る</button>
+                <button class="option" style="width:100%;" onclick="showView('test');">戻る</button>
             </div>
         </div>
     </div>
@@ -101,19 +103,6 @@
         </div>
     </div>
 
-    <script src="js/data-600.js"></script>
-    <script src="js/data-730.js"></script>
-    
-    <script src="js/words-loader.js"></script>
-    
-    <script src="js/app.js"></script>
-   <nav id="main-nav">
-        <button onclick="showView('study')" id="nav-study">暗記</button>
-        <button onclick="showView('test')" id="nav-test">単語テスト</button>
-        <button onclick="showView('list')" id="nav-list">一覧</button>
-        <button onclick="showView('progress')" id="nav-progress" class="active">進捗</button>
-    </nav>
-
     <div id="progress" class="view active">
         <div class="card" style="padding: 20px;">
             <h3 style="margin: 0 0 15px 0; font-size: 16px;">本日の目標設定</h3>
@@ -135,30 +124,26 @@
         </div>
 
         <div class="card" style="padding: 20px;">
-            <h3 id="calendar-month" style="margin: 0 0 15px 0; font-size: 16px;">2026年 4月</h3>
+            <h3 id="calendar-month" style="margin: 0 0 15px 0; font-size: 16px;">カレンダー</h3>
             <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 12px;">
                 </div>
         </div>
     </div>
 
-    <div id="test" class="view">
-        <div id="test-start-screen">
-            </div>
-
-        <div id="quiz-area" class="hidden" style="position: relative;">
-            <button class="abort-btn" onclick="abortTest()" style="position: absolute; top: -10px; right: 10px; background: none; border: none; font-size: 24px; color: #999; cursor: pointer; z-index: 10;">×</button>
+    <script src="js/data-600.js"></script>
+    <script src="js/data-730.js"></script>
+    <script src="js/words-loader.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        window.onload = () => {
+            // 最初は進捗タブを表示する
+            showView('progress'); 
             
-            <div class="test-progress-container"><div id="test-progress-bar"></div></div>
-            <div class="timer-container"><div id="timer-bar"></div></div>
-            
-            <div class="card">
-                <div id="quiz-tag" class="tag">LEVEL</div>
-                <div class="audio-btn" onclick="handleSpeak(event, 'test')">🔊</div>
-                <div id="quiz-en" class="en">Question</div>
-                <div id="quiz-phrase-jp" class="phrase-jp hidden" style="margin-top:15px; color:#666; font-size:16px;"></div>
-            </div>
-            <div class="options" id="options"></div>
-        </div>
-        </div>
+            // app.js内の関数を呼び出してカレンダー等を描画
+            if(typeof updateProgressUI === 'function') updateProgressUI();
+            if(typeof renderCalendar === 'function') renderCalendar();
+        };
+    </script>
 </body>
 </html>
