@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Golden TOEIC Master</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <button onclick="showView('study')">暗記</button>
+        <button onclick="showView('test')">単語テスト</button>
+        <button onclick="showView('phrase')">フレーズ穴埋め</button>
+        <button onclick="showView('list')">進捗</button>
+    </nav>
+
+    <div class="streak-display" id="streak-display">🔥 継続: 0日</div>
+
+    <div id="test" class="view">
+        <div id="test-start">
+            <h2>単語テスト (20秒制限)</h2>
+            <select id="test-genre">
+                <option value="600点 助走">600点 助走</option>
+                <option value="730点 加速">730点 加速</option>
+                <option value="860点 飛躍">860点 飛躍</option>
+            </select>
+            <button class="main-btn" onclick="startTest()">開始</button>
+        </div>
+        <div id="quiz-area" class="hidden">
+            <div class="timer-bar"><div id="timer-fill"></div></div>
+            <div class="card">
+                <div id="quiz-en" class="en">Word</div>
+            </div>
+            <div class="options" id="options"></div>
+        </div>
+    </div>
+
+    <div id="phrase" class="view">
+        <div id="phrase-start">
+            <h2>フレーズ穴埋め</h2>
+            <button class="main-btn" onclick="startPhrase()">開始</button>
+        </div>
+        <div id="phrase-area" class="hidden">
+            <div class="card" onclick="revealPhrase()">
+                <div id="p-jp" class="jp-sub">意味</div>
+                <div id="p-en" class="en">Hint</div>
+                <div id="p-ans" class="jp hidden">正解</div>
+            </div>
+            <button class="main-btn" onclick="nextPhrase()">次へ</button>
+        </div>
+    </div>
+
+    <script src="js/words-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
