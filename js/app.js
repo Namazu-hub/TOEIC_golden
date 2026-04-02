@@ -121,13 +121,28 @@ function renderList() {
     const g = document.getElementById('list-genre').value;
     b.innerHTML = '';
     
-    // カテゴリが一致するもの、または「全ジャンル」をフィルタ
     const filtered = (g === "全ジャンル") ? rawData : rawData.filter(w => w.cat === g);
     
     filtered.forEach(w => {
+        // statsから正解数を取得（未回答なら0）
+        const s = stats[w.en] || { c: 0, t: 0 };
+        // 10回正解で100%とする計算
+        const mastery = Math.min(s.c * 10, 100);
+        
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="padding:10px; border-bottom:1px solid #eee;"><b>${w.en}</b></td>
-                        <td style="border-bottom:1px solid #eee;">${w.jp}</td>`;
+        tr.style.borderBottom = "1px solid #eee";
+        tr.innerHTML = `
+            <td style="padding:15px 10px;">
+                <b>${w.en}</b><br>
+                <small style="color:#999">${w.cat}点レベル</small>
+            </td>
+            <td>${w.jp}</td>
+            <td style="width:100px;">
+                <div style="font-size:10px; margin-bottom:3px;">${mastery}%</div>
+                <div style="width:100%; height:4px; background:#eee; border-radius:2px;">
+                    <div style="width:${mastery}%; height:100%; background:#4A90E2; border-radius:2px;"></div>
+                </div>
+            </td>`;
         b.appendChild(tr);
     });
 }
