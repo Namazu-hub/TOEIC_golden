@@ -177,10 +177,11 @@ const UIController = {
             dayDiv.style.padding = "8px 0";
             dayDiv.style.borderRadius = "50%";
             
-            if (AppState.achievedDates.includes(dateStr)) {
-                dayDiv.style.background = "#4A90E2";
-                dayDiv.style.color = "white";
-                dayDiv.style.fontWeight = "bold";
+        if (AppState.achievedDates.includes(dateStr)) {
+                dayDiv.innerText = "🔥";
+                dayDiv.style.fontSize = "18px"; // アイコンなので少し大きく
+                
+                dayDiv.style.background = "#fff4e5"; 
             }
             grid.appendChild(dayDiv);
         }
@@ -286,7 +287,7 @@ const QuizController = {
 
                 if (isCorrect) {
                     btn.classList.add('correct');
-                    speak(q.phrase);
+                    
                 } else {
                     btn.classList.add('wrong');
                     Array.from(container.children).forEach(b => {
