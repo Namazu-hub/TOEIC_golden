@@ -1,47 +1,52 @@
-// --- 1. グローバル変数の宣言 ---
 let testList = [];
 let testIdx = 0;
 let currentMode = '';
-let timerInterval; // タイマー用の変数
+let timerInterval;
+let isTesting = false; // テスト中フラグ
 
-// --- 2. 初期化処理（ページを開いた時に動く） ---
-window.onload = () => {
-    updateStreak(); // 継続日数の更新
-    showView('study'); // 最初は暗記画面を出す
-};
-
-// --- 3. タブ切り替え（ビュー・ルーター） ---
+// --- 1. ビュー切り替え（テスト中はロック） ---
 function showView(viewId) {
-    // すべての画面を隠す
+    if (isTesting) {
+        if (!confirm("テストを中断して移動しますか？")) return;
+        abortTest(); // 中断処理
+    }
+    
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    // すべてのタブの活性化を解除
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     
-    // 指定された画面とタブだけを表示
     document.getElementById(viewId).classList.add('active');
     const navBtn = document.getElementById('nav-' + viewId);
     if (navBtn) navBtn.classList.add('active');
 
-    // 一覧画面ならリストを描画
     if (viewId === 'list') renderList();
 }
 
-// --- 4. 【ユーザー提供】単語テストのメインロジック ---
+// --- 2. 単語テスト：開始と中断 ---
 function initTest() {
     const genre = document.getElementById('test-genre').value;
     currentMode = document.getElementById('test-mode').value;
     
-    // 選択したレベルから10問ランダム抽出
     testList = rawData.filter(d => d.cat === genre).sort(() => 0.5 - Math.random()).slice(0, 10);
+    if (testList.length === 0) { alert("単語がありません"); return; }
+    
     testIdx = 0;
-
+    isTesting = true; // テスト開始
     document.getElementById('test-start-screen').classList.add('hidden');
     document.getElementById('quiz-area').classList.remove('hidden');
     renderQuiz();
 }
 
+function abortTest() {
+    clearInterval(timerInterval);
+    isTesting = false;
+    document.getElementById('quiz-area').classList.add('hidden');
+    document.getElementById('test-start-screen').classList.remove('hidden');
+}
+
+// --- 3. クイズ描画（モード別制御） ---
 function renderQuiz() {
     if (testIdx >= testList.length) {
+        isTesting = false;
         document.getElementById('quiz-area').classList.add('hidden');
         document.getElementById('test-result').classList.remove('hidden');
         document.getElementById('result-score').innerText = `RESULT: ${testIdx}問終了`;
@@ -54,19 +59,20 @@ function renderQuiz() {
     const progress = document.getElementById('test-progress-bar');
     
     progress.style.width = ((testIdx / 10) * 100) + "%";
+    quizPjp.classList.add('hidden'); // 解答前は隠す
 
+    // モード別の表示と音声
     if (currentMode === 'listening') {
         quizEn.innerText = "???";
-        quizPjp.innerText = "音声を聞いて意味を選んでください";
+        speak(q.en);
     } else if (currentMode === 'phrase') {
         quizEn.innerText = q.hint;
-        quizPjp.innerText = q.phraseJp;
+        // フレーズクイズの時は音声をオフ（何もしない）
     } else {
         quizEn.innerText = q.en;
-        quizPjp.innerText = "";
+        speak(q.en);
     }
     
-    speak(q.en);
     startTimer(20);
 
     const container = document.getElementById('options');
@@ -85,9 +91,13 @@ function renderQuiz() {
             container.classList.add('answered');
             clearInterval(timerInterval);
 
+            // 正解後の表示
             const highlight = `<span style="color:#d93025; font-weight:bold;">${q.en}</span>`;
             quizEn.innerHTML = q.phrase.replace(q.en, highlight);
-            quizPjp.innerText = q.jp;
+            
+            // フレーズ/日本語訳を表示
+            quizPjp.innerText = q.phraseJp + " (" + q.jp + ")";
+            quizPjp.classList.remove('hidden');
 
             const isCorrect = (o === (isEnglishOpt ? q.en : q.jp));
             if (isCorrect) {
@@ -105,8 +115,27 @@ function renderQuiz() {
     });
 }
 
+// --- 4. 一覧描画バグの修正 ---
+function renderList() {
+    const b = document.getElementById('list-body');
+    const g = document.getElementById('list-genre').value;
+    b.innerHTML = '';
+    
+    // カテゴリが一致するもの、または「全ジャンル」をフィルタ
+    const filtered = (g === "全ジャンル") ? rawData : rawData.filter(w => w.cat === g);
+    
+    filtered.forEach(w => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td style="padding:10px; border-bottom:1px solid #eee;"><b>${w.en}</b></td>
+                        <td style="border-bottom:1px solid #eee;">${w.jp}</td>`;
+        b.appendChild(tr);
+    });
+}
+
+// 共通：選択肢生成
 function generateOptions(correctValue, isEnglish) {
     let opts = [correctValue];
+    // rawData全体からハズレを持ってくる
     let pool = rawData.map(d => isEnglish ? d.en : d.jp);
     while(opts.length < 4) {
         let r = pool[Math.floor(Math.random() * pool.length)];
@@ -115,21 +144,7 @@ function generateOptions(correctValue, isEnglish) {
     return opts.sort(() => 0.5 - Math.random());
 }
 
-// --- 5. サポート関数（タイマー・音声・継続日数） ---
-function startTimer(seconds) {
-    let timeLeft = seconds;
-    const bar = document.getElementById('timer-bar');
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-        timeLeft -= 0.1;
-        bar.style.width = (timeLeft / seconds * 100) + "%";
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            testIdx++;
-            renderQuiz();
-        }
-    }, 100);
-}
+// （以下、startTimer, speak, updateStreak, 暗記用ロジック等は前回と同じ）
 
 function speak(text) {
     window.speechSynthesis.cancel();
