@@ -107,11 +107,39 @@
     <script src="js/words-loader.js"></script>
     
     <script src="js/app.js"></script>
-    <nav id="main-nav">
-        <button onclick="showView('study')" id="nav-study" class="active">暗記</button>
+   <nav id="main-nav">
+        <button onclick="showView('study')" id="nav-study">暗記</button>
         <button onclick="showView('test')" id="nav-test">単語テスト</button>
         <button onclick="showView('list')" id="nav-list">一覧</button>
+        <button onclick="showView('progress')" id="nav-progress" class="active">進捗</button>
     </nav>
+
+    <div id="progress" class="view active">
+        <div class="card" style="padding: 20px;">
+            <h3 style="margin: 0 0 15px 0; font-size: 16px;">本日の目標設定</h3>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <input type="number" id="goal-input" value="100" min="1" style="width: 60px; padding: 8px; border-radius: 10px; border: 1px solid #ddd; text-align: center;">
+                <span>問 / 日</span>
+                <button class="option" style="width: auto; margin: 0; padding: 8px 15px; font-size: 12px; background: #4A90E2; color: white;" onclick="saveGoal()">設定保存</button>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 25px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span id="progress-status" style="font-weight: bold; font-size: 14px;">本日の進捗: 0 / 100</span>
+                <span id="streak-count" style="font-size: 18px;">🔥 0日</span>
+            </div>
+            <div class="test-progress-container" style="width: 100%; margin: 0; background: #eee;">
+                <div id="daily-progress-bar" style="height: 100%; background: #4A90E2; width: 0%; transition: width 0.5s;"></div>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 20px;">
+            <h3 id="calendar-month" style="margin: 0 0 15px 0; font-size: 16px;">2026年 4月</h3>
+            <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; font-size: 12px;">
+                </div>
+        </div>
+    </div>
 
     <div id="test" class="view">
         <div id="test-start-screen">
