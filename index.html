@@ -107,5 +107,30 @@
     <script src="js/words-loader.js"></script>
     
     <script src="js/app.js"></script>
+    <nav id="main-nav">
+        <button onclick="showView('study')" id="nav-study" class="active">暗記</button>
+        <button onclick="showView('test')" id="nav-test">単語テスト</button>
+        <button onclick="showView('list')" id="nav-list">一覧</button>
+    </nav>
+
+    <div id="test" class="view">
+        <div id="test-start-screen">
+            </div>
+
+        <div id="quiz-area" class="hidden" style="position: relative;">
+            <button class="abort-btn" onclick="abortTest()" style="position: absolute; top: -10px; right: 10px; background: none; border: none; font-size: 24px; color: #999; cursor: pointer; z-index: 10;">×</button>
+            
+            <div class="test-progress-container"><div id="test-progress-bar"></div></div>
+            <div class="timer-container"><div id="timer-bar"></div></div>
+            
+            <div class="card">
+                <div id="quiz-tag" class="tag">LEVEL</div>
+                <div class="audio-btn" onclick="handleSpeak(event, 'test')">🔊</div>
+                <div id="quiz-en" class="en">Question</div>
+                <div id="quiz-phrase-jp" class="phrase-jp hidden" style="margin-top:15px; color:#666; font-size:16px;"></div>
+            </div>
+            <div class="options" id="options"></div>
+        </div>
+        </div>
 </body>
 </html>
