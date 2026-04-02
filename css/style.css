@@ -129,3 +129,9 @@ nav button.active::after {
 
 .option.correct { background: #E8F5E9; color: #2E7D32; }
 .option.wrong { background: #FFEBEE; color: #C62828; }
+
+.highlight-red {
+    color: var(--error); /* 元の赤色変数を使用 */
+    font-weight: 800;
+    text-decoration: underline;
+}
