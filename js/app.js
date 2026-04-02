@@ -248,3 +248,103 @@ function processStreak() {
         saveCompletedDate(today);
     }
 }
+
+let dailyCount = parseInt(localStorage.getItem('daily_count')) || 0;
+let targetGoal = parseInt(localStorage.getItem('target_goal')) || 100;
+let stats = JSON.parse(localStorage.getItem('word_stats')) || {}; // { "word": {c: correct_count, t: total_count} }
+let achievedDates = JSON.parse(localStorage.getItem('achieved_dates')) || []; // ["2026-04-01", ...]
+
+// 目標設定の保存
+function saveGoal() {
+    const val = document.getElementById('goal-input').value;
+    targetGoal = parseInt(val);
+    localStorage.setItem('target_goal', targetGoal);
+    updateProgressUI();
+    alert("目標を更新しました！");
+}
+
+// クイズ回答時にカウントアップ（renderQuiz内の正解判定時などに呼ぶ）
+function incrementDailyCount(word, isCorrect) {
+    dailyCount++;
+    localStorage.setItem('daily_count', dailyCount);
+    
+    // 単語ごとの統計（会得率用）
+    if (!stats[word]) stats[word] = { c: 0, t: 0 };
+    stats[word].t++;
+    if (isCorrect) stats[word].c++;
+    localStorage.setItem('word_stats', JSON.stringify(stats));
+
+    // ノルマ達成判定
+    if (dailyCount >= targetGoal) {
+        markDateAchieved();
+    }
+    updateProgressUI();
+}
+
+function markDateAchieved() {
+    const today = new Date().toISOString().split('T')[0];
+    if (!achievedDates.includes(today)) {
+        achievedDates.push(today);
+        localStorage.setItem('achieved_dates', JSON.stringify(achievedDates));
+        updateStreak(); // 継続日数の再計算
+        renderCalendar();
+    }
+}
+
+// 一覧の描画（会得率バー付き）
+function renderList() {
+    const b = document.getElementById('list-body');
+    const g = document.getElementById('list-genre').value;
+    b.innerHTML = '';
+    const filtered = (g === "全ジャンル") ? rawData : rawData.filter(w => w.cat === g);
+    
+    filtered.forEach(w => {
+        const s = stats[w.en] || { c: 0, t: 0 };
+        const mastery = Math.min(s.c * 10, 100); // 10回正解で100%
+        
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid #eee";
+        tr.innerHTML = `
+            <td style="padding:15px 10px;"><b>${w.en}</b></td>
+            <td>${w.jp}</td>
+            <td style="width:80px; text-align:right;">
+                <span style="font-size:10px;">${mastery}%</span>
+                <div style="width:100%; height:4px; background:#eee; border-radius:2px;">
+                    <div style="width:${mastery}%; height:100%; background:#4A90E2;"></div>
+                </div>
+            </td>`;
+        b.appendChild(tr);
+    });
+}
+
+// カレンダー描画（簡易版）
+function renderCalendar() {
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    const now = new Date();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const dayDiv = document.createElement('div');
+        dayDiv.innerText = i;
+        dayDiv.style.padding = "8px 0";
+        dayDiv.style.borderRadius = "50%";
+        
+        if (achievedDates.includes(dateStr)) {
+            dayDiv.style.background = "#4A90E2";
+            dayDiv.style.color = "white";
+            dayDiv.style.fontWeight = "bold";
+        }
+        grid.appendChild(dayDiv);
+    }
+}
+
+function updateProgressUI() {
+    const bar = document.getElementById('daily-progress-bar');
+    const status = document.getElementById('progress-status');
+    const percent = Math.min((dailyCount / targetGoal) * 100, 100);
+    bar.style.width = percent + "%";
+    status.innerText = `本日の進捗: ${dailyCount} / ${targetGoal}`;
+    document.getElementById('goal-input').value = targetGoal;
+}
