@@ -53,7 +53,8 @@
             <div class="timer-container"><div id="timer-bar"></div></div>
             <div class="card" style="cursor:default; min-height:180px;">
                 <div id="quiz-tag" class="tag">CAT</div>
-                <div id="quiz-en" class="en" style="font-size:22px;">Question</div>
+                <div class="audio-btn" onclick="handleSpeak(event, 'test')">🔊</div>
+                <div id="quiz-en" class="en">Question</div>
                 <div id="quiz-phrase-jp" style="font-size:14px; color:#666; margin-top:10px;"></div>
             </div>
             <div class="options" id="options"></div>
@@ -64,8 +65,47 @@
         </div>
     </div>
 
-    <div id="grammar" class="view">...（以前の構造と同じ）...</div>
-    <div id="list" class="view">...（以前の構造と同じ）...</div>
+    <div id="grammar" class="view">
+        <div id="grammar-start-screen">
+            <h2>文法 Part 5 形式</h2>
+            <div class="selector-group">
+                <select id="grammar-genre">
+                    <option value="名詞">名詞</option>
+                    <option value="副詞">副詞</option>
+                    <option value="比較級">比較級</option>
+                </select>
+            </div>
+            <button class="main-btn" onclick="startGrammarTest()">テスト開始</button>
+        </div>
+        <div id="grammar-quiz-area" class="hidden">
+            <div class="card" style="cursor:default; min-height:180px;">
+                <div id="grammar-tag" class="tag">Grammar</div>
+                <div id="grammar-sentence" class="en" style="font-size:18px;">Sentence</div>
+            </div>
+            <div class="options" id="grammar-options"></div>
+            <div id="grammar-translation" class="translation-area hidden"></div>
+        </div>
+        <div id="grammar-result" class="hidden">
+            <h3 id="grammar-result-score"></h3>
+            <button class="main-btn" onclick="showView('grammar')">もう一度</button>
+        </div>
+    </div>
+
+    <div id="list" class="view">
+        <div class="selector-group">
+            <select id="list-genre" onchange="renderList()">
+                <option value="全ジャンル">全ジャンルを表示</option>
+                <option value="600">600点 助走</option>
+                <option value="730">730点 加速</option>
+            </select>
+        </div>
+        <div class="list-card">
+            <table>
+                <thead><tr><th>単語</th><th>意味</th><th>統計</th></tr></thead>
+                <tbody id="list-body"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script src="js/data-600.js"></script>
     <script src="js/data-730.js"></script>
